@@ -1,0 +1,490 @@
+<title>우리 반 이름 뽑기</title>
+<style>
+:root{
+  --bg:#EEF3F6;
+  --surface:#FFFFFF;
+  --ink:#1E2A32;
+  --muted:#5E7080;
+  --accent:#E8A93B;
+  --accent-ink:#5A3B08;
+  --accent-2:#3E7C59;
+  --line:#D7E0E6;
+  --card-shadow: 0 3px 0 rgba(30,42,50,0.10), 0 10px 24px rgba(30,42,50,0.08);
+  --done-bg:#E3E8EA;
+  --done-ink:#94A3AC;
+  --danger:#C0533E;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141B20;
+    --surface:#1C262C;
+    --ink:#EDF3F5;
+    --muted:#9AACB5;
+    --accent:#F0B559;
+    --accent-ink:#3A2600;
+    --accent-2:#5BA07A;
+    --line:#2C3A41;
+    --card-shadow: 0 3px 0 rgba(0,0,0,0.35), 0 12px 28px rgba(0,0,0,0.45);
+    --done-bg:#253138;
+    --done-ink:#5E6F79;
+    --danger:#E2745A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141B20;
+  --surface:#1C262C;
+  --ink:#EDF3F5;
+  --muted:#9AACB5;
+  --accent:#F0B559;
+  --accent-ink:#3A2600;
+  --accent-2:#5BA07A;
+  --line:#2C3A41;
+  --card-shadow: 0 3px 0 rgba(0,0,0,0.35), 0 12px 28px rgba(0,0,0,0.45);
+  --done-bg:#253138;
+  --done-ink:#5E6F79;
+  --danger:#E2745A;
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Noto Sans KR', -apple-system, sans-serif;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:28px 24px 32px;
+  gap:22px;
+}
+
+.display{ font-family:'Do Hyeon','Noto Sans KR',sans-serif; letter-spacing:0.01em; }
+
+header{
+  width:100%;
+  max-width:1180px;
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+h1{
+  font-size:clamp(28px, 4vw, 42px);
+  margin:0;
+  text-wrap:balance;
+}
+h1 .accent{ color:var(--accent-2); }
+.subtitle{
+  margin:0;
+  color:var(--muted);
+  font-size:17px;
+}
+
+.status-row{
+  width:100%;
+  max-width:1180px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.progress-pill{
+  font-family:'Do Hyeon',sans-serif;
+  font-size:19px;
+  background:var(--surface);
+  border:2px solid var(--line);
+  border-radius:999px;
+  padding:8px 20px;
+  color:var(--muted);
+}
+.progress-pill b{ color:var(--accent-2); font-size:22px; }
+.edit-toggle{
+  font-family:'Noto Sans KR',sans-serif;
+  font-weight:700;
+  font-size:16px;
+  background:var(--surface);
+  color:var(--ink);
+  border:2px solid var(--line);
+  border-radius:999px;
+  padding:9px 22px;
+  cursor:pointer;
+  transition:background .15s, transform .1s, border-color .15s;
+}
+.edit-toggle:hover{ border-color:var(--accent-2); }
+.edit-toggle:active{ transform:scale(0.97); }
+.edit-toggle[aria-pressed="true"]{
+  background:var(--accent-2);
+  color:#fff;
+  border-color:var(--accent-2);
+}
+
+main{
+  width:100%;
+  max-width:1180px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:26px;
+}
+
+.stage{
+  width:100%;
+  background:var(--surface);
+  border:2px solid var(--line);
+  border-radius:28px;
+  box-shadow:var(--card-shadow);
+  min-height:220px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:36px 24px;
+  position:relative;
+  overflow:hidden;
+}
+.stage-placeholder{
+  font-family:'Do Hyeon',sans-serif;
+  color:var(--muted);
+  font-size:clamp(22px,3.2vw,30px);
+  text-align:center;
+}
+.stage-name{
+  font-family:'Do Hyeon',sans-serif;
+  font-size:clamp(56px, 11vw, 130px);
+  color:var(--ink);
+  text-align:center;
+  line-height:1.1;
+  text-wrap:balance;
+  word-break:keep-all;
+}
+.stage-name.rolling{ color:var(--muted); }
+.stage-name.landed{
+  color:var(--accent-2);
+  animation:pop .38s cubic-bezier(.2,1.4,.4,1);
+}
+.stage-name.finished{ color:var(--accent-2); }
+@keyframes pop{
+  0%{ transform:scale(0.75); }
+  60%{ transform:scale(1.08); }
+  100%{ transform:scale(1); }
+}
+@media (prefers-reduced-motion: reduce){
+  .stage-name.landed{ animation:none; }
+}
+.confetti-msg{
+  font-family:'Noto Sans KR',sans-serif;
+  font-weight:700;
+  font-size:20px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.grid{
+  width:100%;
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
+  gap:16px;
+}
+.card{
+  background:var(--surface);
+  border:2px solid var(--line);
+  border-radius:18px;
+  box-shadow:var(--card-shadow);
+  padding:18px 12px;
+  min-height:96px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  transition:opacity .2s, background .2s, border-color .2s, transform .15s;
+}
+.card .name-text{
+  font-family:'Do Hyeon',sans-serif;
+  font-size:clamp(20px, 2.6vw, 28px);
+  color:var(--ink);
+  word-break:keep-all;
+}
+.card.picked{
+  background:var(--done-bg);
+  border-color:var(--done-bg);
+}
+.card.picked .name-text{
+  color:var(--done-ink);
+  text-decoration:line-through;
+  text-decoration-thickness:3px;
+}
+.card.current{
+  border-color:var(--accent-2);
+  transform:translateY(-3px);
+}
+.card input{
+  width:100%;
+  border:none;
+  background:transparent;
+  text-align:center;
+  font-family:'Do Hyeon',sans-serif;
+  font-size:clamp(18px, 2.3vw, 24px);
+  color:var(--ink);
+  outline:none;
+  padding:4px;
+  border-bottom:2px dashed var(--line);
+}
+.card input:focus{ border-bottom-color:var(--accent-2); }
+
+.controls{
+  width:100%;
+  max-width:1180px;
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+button.action{
+  font-family:'Do Hyeon',sans-serif;
+  font-size:24px;
+  padding:20px 48px;
+  border-radius:20px;
+  border:none;
+  cursor:pointer;
+  box-shadow:var(--card-shadow);
+  transition:transform .1s, filter .15s, opacity .2s;
+}
+button.action:active{ transform:scale(0.96); }
+button.action:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+.btn-pick{
+  background:var(--accent-2);
+  color:#fff;
+}
+.btn-pick:hover:not(:disabled){ filter:brightness(1.08); }
+.btn-reset{
+  background:var(--surface);
+  color:var(--danger);
+  border:2px solid var(--line);
+}
+.btn-reset:hover{ border-color:var(--danger); }
+
+.hint{
+  color:var(--muted);
+  font-size:15px;
+  text-align:center;
+  max-width:640px;
+}
+
+footer{
+  color:var(--muted);
+  font-size:13px;
+}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+
+<header>
+  <div>
+    <h1 class="display">우리 반 <span class="accent">이름 뽑기</span></h1>
+    <p class="subtitle">이름을 눌러 수정하고, 버튼 하나로 오늘의 발표자를 뽑아 보세요</p>
+  </div>
+  <button class="edit-toggle" id="editToggle" aria-pressed="false" type="button">✏️ 이름 수정하기</button>
+</header>
+
+<div class="status-row">
+  <div class="progress-pill">남은 학생 <b id="remainCount">10</b> / <span id="totalCount">10</span>명</div>
+</div>
+
+<main>
+  <section class="stage" id="stage" aria-live="polite">
+    <div class="stage-placeholder" id="stagePlaceholder">‘한 명 뽑기’ 버튼을 눌러보세요!</div>
+  </section>
+
+  <section class="grid" id="grid" aria-label="학생 이름 목록"></section>
+</main>
+
+<div class="controls">
+  <button class="action btn-pick" id="pickBtn" type="button">🎲 한 명 뽑기</button>
+  <button class="action btn-reset" id="resetBtn" type="button">↺ 처음부터 다시</button>
+</div>
+
+<p class="hint">모든 학생이 뽑히면 자동으로 멈춰요. ‘처음부터 다시’를 누르면 전체 명단이 초기화됩니다.</p>
+
+<footer>교실 화면 · 새로고침해도 이름은 유지되지 않으니 필요하면 수정 후 바로 사용하세요</footer>
+
+<script>
+(function(){
+  var DEFAULT_NAMES = ["김민준","이서연","박도윤","최지우","정하은","강시우","조서윤","윤지호","임수아","한예준"];
+  var names = DEFAULT_NAMES.slice();
+  var pickedSet = new Set();
+  var editMode = false;
+  var rolling = false;
+
+  var grid = document.getElementById('grid');
+  var stage = document.getElementById('stage');
+  var stagePlaceholder = document.getElementById('stagePlaceholder');
+  var pickBtn = document.getElementById('pickBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var editToggle = document.getElementById('editToggle');
+  var remainCount = document.getElementById('remainCount');
+  var totalCount = document.getElementById('totalCount');
+
+  function renderGrid(){
+    grid.innerHTML = '';
+    names.forEach(function(name, idx){
+      var card = document.createElement('div');
+      card.className = 'card' + (pickedSet.has(idx) ? ' picked' : '');
+      card.dataset.idx = idx;
+
+      if(editMode){
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.value = name;
+        input.maxLength = 12;
+        input.setAttribute('aria-label', (idx+1) + '번째 학생 이름');
+        input.addEventListener('input', function(e){
+          names[idx] = e.target.value;
+        });
+        input.addEventListener('click', function(e){ e.stopPropagation(); });
+        card.appendChild(input);
+      } else {
+        var span = document.createElement('div');
+        span.className = 'name-text';
+        span.textContent = name || '(이름 없음)';
+        card.appendChild(span);
+      }
+      grid.appendChild(card);
+    });
+  }
+
+  function updateCount(){
+    var remain = names.length - pickedSet.size;
+    remainCount.textContent = remain;
+    totalCount.textContent = names.length;
+  }
+
+  function setStageIdle(){
+    stage.innerHTML = '';
+    var ph = document.createElement('div');
+    ph.className = 'stage-placeholder display';
+    ph.textContent = '‘한 명 뽑기’ 버튼을 눌러보세요!';
+    stage.appendChild(ph);
+  }
+
+  function setStageFinished(){
+    stage.innerHTML = '';
+    var wrap = document.createElement('div');
+    wrap.style.textAlign = 'center';
+    var main = document.createElement('div');
+    main.className = 'stage-name finished display';
+    main.textContent = '모두 뽑았어요! 🎉';
+    var sub = document.createElement('div');
+    sub.className = 'confetti-msg';
+    sub.textContent = '처음부터 다시 눌러 새로 시작하세요';
+    wrap.appendChild(main);
+    wrap.appendChild(sub);
+    stage.appendChild(wrap);
+  }
+
+  function editModeChanged(newVal){
+    editMode = newVal;
+    editToggle.setAttribute('aria-pressed', String(editMode));
+    editToggle.textContent = editMode ? '✅ 수정 완료' : '✏️ 이름 수정하기';
+    renderGrid();
+  }
+
+  editToggle.addEventListener('click', function(){
+    editModeChanged(!editMode);
+  });
+
+  function availableIndexes(){
+    var arr = [];
+    for(var i=0;i<names.length;i++){
+      if(!pickedSet.has(i)) arr.push(i);
+    }
+    return arr;
+  }
+
+  function pickOne(){
+    if(rolling) return;
+    if(editMode){ editModeChanged(false); }
+    var avail = availableIndexes();
+    if(avail.length === 0) return;
+
+    rolling = true;
+    pickBtn.disabled = true;
+    resetBtn.disabled = true;
+
+    stage.innerHTML = '';
+    var rollEl = document.createElement('div');
+    rollEl.className = 'stage-name rolling display';
+    stage.appendChild(rollEl);
+
+    var ticks = 0;
+    var maxTicks = 18 + Math.floor(Math.random()*6);
+    var delay = 60;
+
+    function tick(){
+      var idx = avail[Math.floor(Math.random()*avail.length)];
+      rollEl.textContent = names[idx] || '(이름 없음)';
+      ticks++;
+      if(ticks < maxTicks){
+        delay = delay * 1.08;
+        setTimeout(tick, delay);
+      } else {
+        finalize();
+      }
+    }
+
+    function finalize(){
+      var finalIdx = avail[Math.floor(Math.random()*avail.length)];
+      pickedSet.add(finalIdx);
+      rollEl.textContent = names[finalIdx] || '(이름 없음)';
+      rollEl.classList.remove('rolling');
+      rollEl.classList.add('landed');
+      updateCount();
+      renderGrid();
+      highlightCurrent(finalIdx);
+      rolling = false;
+      pickBtn.disabled = availableIndexes().length === 0;
+      resetBtn.disabled = false;
+      if(availableIndexes().length === 0){
+        setTimeout(setStageFinished, 900);
+      }
+    }
+
+    setTimeout(tick, delay);
+  }
+
+  function highlightCurrent(idx){
+    var cards = grid.querySelectorAll('.card');
+    cards.forEach(function(c){
+      if(Number(c.dataset.idx) === idx){
+        c.classList.add('current');
+      } else {
+        c.classList.remove('current');
+      }
+    });
+  }
+
+  function resetAll(){
+    pickedSet.clear();
+    rolling = false;
+    pickBtn.disabled = false;
+    resetBtn.disabled = false;
+    updateCount();
+    renderGrid();
+    setStageIdle();
+  }
+
+  pickBtn.addEventListener('click', pickOne);
+  resetBtn.addEventListener('click', resetAll);
+
+  renderGrid();
+  updateCount();
+  setStageIdle();
+})();
+</script>
